@@ -95,6 +95,7 @@ try:
             except ServerError:
                 points.append('X')
                 session = None
+                break
             except Unavailable:
                 points.append('C')
             else:
