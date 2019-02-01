@@ -13,7 +13,7 @@ Options:
     -i --interval INTERVAL  Interval between query executions (in milliseconds) [default: 1000]
 """
 
-from cassandra import ConsistencyLevel, Unavailable
+from cassandra import ConsistencyLevel, Unavailable, ReadTimeout
 from cassandra.cluster import Cluster, NoHostAvailable
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.protocol import ServerError
@@ -63,9 +63,10 @@ print(term.clear)
 print(". = Success")
 print("C = Not enough live replicas to satisfy the requested consistency level")
 print("E = All connections are busy, defunct, closed, or resulted in errors when used.")
+print("T = Timeout")
 print("X = Server error. Session will be reopened.")
 print()
-y_offset = 6
+y_offset = 7
 
 longest_name = 0
 for (consistency, _) in history:
@@ -77,33 +78,30 @@ x_offset = longest_name + 1
 
 try:
     while 1:
-        if session is None:
-            with term.location(0, 0):
-                print("Connecting to cluster...", end='', flush=True)
-                session = cluster.connect(keyspace)
-                statement = session.prepare(query)
-
-            with term.location(0, 0):
-                print(query)
-
         for (i, (consistency, points)) in enumerate(history):
             if session is None:
-                # Session interrupted.
-                points.append(' ')
-                continue
+                with term.location(0, 0):
+                    print("Connecting to cluster...", end='', flush=True)
+                    session = cluster.connect(keyspace)
+                    statement = session.prepare(query)
+
+                with term.location(0, 0):
+                    print(query)
 
             try:
                 statement.consistency_level = consistency
                 rows = session.execute(statement)
             except NoHostAvailable:
                 points.append('E')
+            except Unavailable:
+                points.append('C')
+            except ReadTimeout:
+                points.append('T')
+            else:
+                points.append('.')
             except ServerError:
                 points.append('X')
                 session = None
-            except Unavailable:
-                points.append('C')
-            else:
-                points.append('.')
 
             with term.location(x_offset, i + y_offset):
                 data_points = points[-(term.width - x_offset):]
