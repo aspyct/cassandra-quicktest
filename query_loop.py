@@ -2,7 +2,7 @@
 """Continuously run a given query on a Cassandra db
 
 Usage:
-    query_loop.py [-h HOST -h HOST] [-p PORT] [-k KEYSPACE] [-u USER] [-P PASSWORD] [-c CONSISTENCY] [-i INTERVAL] QUERY
+    query_loop.py [-h HOST -h HOST] [-p PORT] [-k KEYSPACE] [-u USER] [-P PASSWORD] [-i INTERVAL] QUERY
 
 Options:
     -h --host HOST  Cassandra host address [default: localhost]
@@ -10,8 +10,6 @@ Options:
     -k --keyspace KEYSPACE  Keyspace to select
     -u --user USERNAME  Username for authentication
     -P --password PASSWORD  Password for authentication
-    -c --consistency CONSISTENCY  Any consistency level accepted by Cassandra.
-                                  If not specified, the query will be executed for each level.
     -i --interval INTERVAL  Interval between query executions (in milliseconds) [default: 1000]
 """
 
@@ -34,12 +32,6 @@ keyspace = options.get('--keyspace')
 query = options.get('QUERY')
 interval = int(options.get('--interval'))
 
-#if consistency_level not in ConsistencyLevel.name_to_value:
-#    print("No such consistency level: %s" % consistency_level)
-#    print("Available options: " + repr(ConsistencyLevel.name_to_value.keys()))
-#
-#consistency_level = getattr(ConsistencyLevel, consistency_level)
-
 if user is not None:
     if password is None:
         password = getpass()
@@ -59,16 +51,11 @@ print("Preparing statement...", end='', flush=True)
 statement = session.prepare(query)
 print(" Done.")
 
-#print("Setting the consistency level...", end='', flush=True)
-#statement.consistency_level = consistency_level
-#print(" Done.")
-
 history = (
     (ConsistencyLevel.ONE, []),
     (ConsistencyLevel.TWO, []),
     (ConsistencyLevel.THREE, []),
     (ConsistencyLevel.ALL, []),
-    # (ConsistencyLevel.ANY, []), # TODO: Only supported for writes
     (ConsistencyLevel.QUORUM, []),
     (ConsistencyLevel.SERIAL, []),
     (ConsistencyLevel.EACH_QUORUM, []),
