@@ -42,14 +42,8 @@ else:
 
 
 cluster = Cluster(hosts, port=port, auth_provider=auth)
-
-print("Connecting to cluster...", end='', flush=True)
-session = cluster.connect(keyspace)
-print(" Done.")
-
-print("Preparing statement...", end='', flush=True)
-statement = session.prepare(query)
-print(" Done.")
+session = None
+statement = None
 
 history = (
     (ConsistencyLevel.ONE, []),
@@ -65,7 +59,13 @@ history = (
 )
 
 term = Terminal()
-print(term.clear + query)
+print(term.clear)
+print(". = Success")
+print("C = Not enough live replicas to satisfy the requested consistency level")
+print("E = All connections are busy, defunct, closed, or resulted in errors when used.")
+print("X = Server error. Session will be reopened.")
+print()
+y_offset = 6
 
 longest_name = 0
 for (consistency, _) in history:
@@ -73,25 +73,35 @@ for (consistency, _) in history:
     longest_name = max(longest_name, len(display_name))
     print(display_name)
 
-graph_offset = longest_name + 1
+x_offset = longest_name + 1
 
 try:
     while 1:
+        if session is None:
+            with term.location(0, 0):
+                print("Connecting to cluster...", end='', flush=True)
+                session = cluster.connect(keyspace)
+                statement = session.prepare(query)
+
+            with term.location(0, 0):
+                print(query)
+
         for (i, (consistency, points)) in enumerate(history):
             try:
                 statement.consistency_level = consistency
                 rows = session.execute(statement)
-            except ServerError:
-                points.append('E')
             except NoHostAvailable:
-                points.append('H')
+                points.append('E')
+            except ServerError:
+                points.append('X')
+                session = None
             except Unavailable:
-                points.append('A')
+                points.append('C')
             else:
                 points.append('.')
 
-            with term.location(graph_offset, i + 1):
-                data_points = points[-(term.width - graph_offset):]
+            with term.location(x_offset, i + y_offset):
+                data_points = points[-(term.width - x_offset):]
                 print(''.join(data_points), end='', flush=True)
 
         sleep(interval / 1000)
