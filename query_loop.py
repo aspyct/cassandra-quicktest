@@ -97,11 +97,11 @@ try:
                 points.append('C')
             except ReadTimeout:
                 points.append('T')
-            else:
-                points.append('.')
             except ServerError:
                 points.append('X')
                 session = None
+            else:
+                points.append('.')
 
             with term.location(x_offset, i + y_offset):
                 data_points = points[-(term.width - x_offset):]
