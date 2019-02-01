@@ -87,6 +87,11 @@ try:
                 print(query)
 
         for (i, (consistency, points)) in enumerate(history):
+            if session is None:
+                # Session interrupted.
+                points.append(' ')
+                continue
+
             try:
                 statement.consistency_level = consistency
                 rows = session.execute(statement)
@@ -95,7 +100,6 @@ try:
             except ServerError:
                 points.append('X')
                 session = None
-                break
             except Unavailable:
                 points.append('C')
             else:
