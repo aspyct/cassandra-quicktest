@@ -13,7 +13,7 @@ Options:
     -i --interval INTERVAL  Interval between query executions (in milliseconds) [default: 1000]
 """
 
-from cassandra import ConsistencyLevel
+from cassandra import ConsistencyLevel, Unavailable
 from cassandra.cluster import Cluster, NoHostAvailable
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.protocol import ServerError
@@ -85,6 +85,8 @@ try:
                 points.append('E')
             except NoHostAvailable:
                 points.append('H')
+            except Unavailable:
+                points.append('A')
             else:
                 points.append('.')
 
