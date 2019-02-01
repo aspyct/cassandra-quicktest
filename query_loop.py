@@ -2,7 +2,7 @@
 """Continuously run a given query on a Cassandra db
 
 Usage:
-    query_loop.py [-h HOST -h HOST] [-p PORT] [-k KEYSPACE] [-u USER] [-P PASSWORD] [-i INTERVAL] QUERY
+    query_loop.py [-h HOST]... [-p PORT] [-k KEYSPACE] [-u USER] [-P PASSWORD] [-i INTERVAL] QUERY
 
 Options:
     -h --host HOST  Cassandra host address [default: localhost]
